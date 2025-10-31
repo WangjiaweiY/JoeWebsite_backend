@@ -1,0 +1,218 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 管理员用户表
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique @db.VarChar(50)
+  password  String   @db.VarChar(255)
+  email     String?  @db.VarChar(100)
+  avatar    String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// 个人信息表
+model Profile {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(100)
+  nameEn      String?  @map("name_en") @db.VarChar(100)
+  title       String   @db.VarChar(200)
+  titleEn     String?  @map("title_en") @db.VarChar(200)
+  avatar      String?  @db.VarChar(255)
+  bio         String?  @db.Text
+  bioEn       String?  @map("bio_en") @db.Text
+  email       String?  @db.VarChar(100)
+  phone       String?  @db.VarChar(50)
+  location    String?  @db.VarChar(100)
+  locationEn  String?  @map("location_en") @db.VarChar(100)
+  github      String?  @db.VarChar(255)
+  linkedin    String?  @db.VarChar(255)
+  twitter     String?  @db.VarChar(255)
+  website     String?  @db.VarChar(255)
+  resumeUrl   String?  @map("resume_url") @db.VarChar(255)
+  resumeUrlEn String?  @map("resume_url_en") @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("profile")
+}
+
+// 项目表
+model Project {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(200)
+  titleEn     String?  @map("title_en") @db.VarChar(200)
+  description String   @db.Text
+  descriptionEn String? @map("description_en") @db.Text
+  content     String?  @db.LongText
+  contentEn   String?  @map("content_en") @db.LongText
+  cover       String?  @db.VarChar(255)
+  images      String?  @db.Text // JSON array of image URLs
+  tags        String?  @db.VarChar(500) // Comma-separated tags
+  techStack   String?  @map("tech_stack") @db.VarChar(500) // Comma-separated tech
+  demoUrl     String?  @map("demo_url") @db.VarChar(255)
+  githubUrl   String?  @map("github_url") @db.VarChar(255)
+  startDate   DateTime? @map("start_date") @db.Date
+  endDate     DateTime? @map("end_date") @db.Date
+  isFeatured  Boolean  @default(false) @map("is_featured")
+  sortOrder   Int      @default(0) @map("sort_order")
+  views       Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("projects")
+  @@index([isFeatured, sortOrder])
+}
+
+// 经历类型枚举
+enum ExperienceType {
+  WORK
+  EDUCATION
+  VOLUNTEER
+  CERTIFICATE
+}
+
+// 经历表
+model Experience {
+  id          Int            @id @default(autoincrement())
+  type        ExperienceType @default(WORK)
+  title       String         @db.VarChar(200)
+  titleEn     String?        @map("title_en") @db.VarChar(200)
+  company     String         @db.VarChar(200)
+  companyEn   String?        @map("company_en") @db.VarChar(200)
+  location    String?        @db.VarChar(100)
+  locationEn  String?        @map("location_en") @db.VarChar(100)
+  description String?        @db.Text
+  descriptionEn String?      @map("description_en") @db.Text
+  startDate   DateTime       @map("start_date") @db.Date
+  endDate     DateTime?      @map("end_date") @db.Date
+  isCurrent   Boolean        @default(false) @map("is_current")
+  sortOrder   Int            @default(0) @map("sort_order")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  @@map("experiences")
+  @@index([type, sortOrder])
+}
+
+// 技能分类表
+model SkillCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  nameEn    String?  @map("name_en") @db.VarChar(100)
+  icon      String?  @db.VarChar(100)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  skills Skill[]
+
+  @@map("skill_categories")
+}
+
+// 技能表
+model Skill {
+  id         Int           @id @default(autoincrement())
+  categoryId Int           @map("category_id")
+  name       String        @db.VarChar(100)
+  nameEn     String?       @map("name_en") @db.VarChar(100)
+  level      Int           @default(50) // 0-100
+  icon       String?       @db.VarChar(100)
+  color      String?       @db.VarChar(50)
+  sortOrder  Int           @default(0) @map("sort_order")
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
+
+  category SkillCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("skills")
+  @@index([categoryId, sortOrder])
+}
+
+// 博客文章表
+model Post {
+  id          Int       @id @default(autoincrement())
+  title       String    @db.VarChar(200)
+  titleEn     String?   @map("title_en") @db.VarChar(200)
+  summary     String?   @db.Text
+  summaryEn   String?   @map("summary_en") @db.Text
+  content     String    @db.LongText
+  contentEn   String?   @map("content_en") @db.LongText
+  cover       String?   @db.VarChar(255)
+  tags        String?   @db.VarChar(500) // Comma-separated tags
+  isPublished Boolean   @default(false) @map("is_published")
+  views       Int       @default(0)
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  comments Comment[]
+
+  @@map("posts")
+  @@index([isPublished, publishedAt])
+}
+
+// 留言/评论表
+model Comment {
+  id        Int       @id @default(autoincrement())
+  postId    Int?      @map("post_id")
+  parentId  Int?      @map("parent_id")
+  name      String    @db.VarChar(100)
+  email     String?   @db.VarChar(100)
+  website   String?   @db.VarChar(255)
+  content   String    @db.Text
+  reply     String?   @db.Text // 管理员回复
+  ipAddress String?   @map("ip_address") @db.VarChar(50)
+  userAgent String?   @map("user_agent") @db.VarChar(500)
+  isApproved Boolean  @default(false) @map("is_approved")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  post   Post?     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+  @@index([postId])
+  @@index([parentId])
+  @@index([isApproved, createdAt])
+}
+
+// 网站统计表
+model SiteStats {
+  id             Int      @id @default(autoincrement())
+  date           DateTime @unique @db.Date
+  visits         Int      @default(0)
+  uniqueVisitors Int      @default(0) @map("unique_visitors")
+  pageViews      Int      @default(0) @map("page_views")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("site_stats")
+  @@index([date])
+}
+
+// 网站配置表
+model SiteSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique @db.VarChar(100)
+  value     String?  @db.Text
+  type      String   @default("string") @db.VarChar(50) // string, number, boolean, json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
+
