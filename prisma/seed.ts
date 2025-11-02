@@ -216,31 +216,59 @@ async function main() {
   });
   console.log('✓ 创建博客文章示例:', post.title);
 
-  // 创建网站配置
+  // 创建或更新网站配置
   const settings = await Promise.all([
-    prisma.siteSetting.create({
-      data: {
+    prisma.siteSetting.upsert({
+      where: { key: 'site_name' },
+      update: {},
+      create: {
         key: 'site_name',
         value: "Joe's Website",
         type: 'string',
       },
     }),
-    prisma.siteSetting.create({
-      data: {
+    prisma.siteSetting.upsert({
+      where: { key: 'site_description' },
+      update: {},
+      create: {
         key: 'site_description',
         value: '个人网站 - 记录生活，分享技术',
         type: 'string',
       },
     }),
-    prisma.siteSetting.create({
-      data: {
+    prisma.siteSetting.upsert({
+      where: { key: 'enable_comments' },
+      update: {},
+      create: {
         key: 'enable_comments',
         value: 'true',
         type: 'boolean',
       },
     }),
   ]);
-  console.log('✓ 创建网站配置:', settings.length, '项');
+  console.log('✓ 创建/更新网站配置:', settings.length, '项');
+
+  // 创建最近7天的访问统计数据
+  const today = new Date();
+  const siteStatsData = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    date.setHours(0, 0, 0, 0);
+    
+    siteStatsData.push({
+      date: date,
+      visits: Math.floor(Math.random() * 100) + 50, // 50-150随机访问量
+      uniqueVisitors: Math.floor(Math.random() * 80) + 30, // 30-110随机独立访客
+      pageViews: Math.floor(Math.random() * 200) + 100, // 100-300随机页面浏览量
+    });
+  }
+
+  await prisma.siteStats.createMany({
+    data: siteStatsData,
+    skipDuplicates: true,
+  });
+  console.log('✓ 创建访问统计数据:', siteStatsData.length, '天');
 
   console.log('✅ 数据库初始化完成！');
   console.log('\n默认管理员账号:');
